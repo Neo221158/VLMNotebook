@@ -1,5 +1,4 @@
 import { Agent } from "@/lib/types";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 

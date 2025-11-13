@@ -4,6 +4,8 @@ import { useSession } from "@/lib/auth-client";
 import { UserProfile } from "@/components/auth/user-profile";
 import { RecentChatsList } from "@/components/dashboard/recent-chats-list";
 import { AgentCardCompact } from "@/components/agents/agent-card-compact";
+import { RecentChatSkeleton } from "@/components/dashboard/recent-chat-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { agents } from "@/lib/mock-data/agents";
 import { Lock } from "lucide-react";
 
@@ -12,10 +14,47 @@ export default function DashboardPage() {
 
   if (isPending) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Welcome Header Skeleton */}
+          <div className="mb-8">
+            <Skeleton className="h-9 w-64 mb-2" />
+            <Skeleton className="h-5 w-96" />
+          </div>
+
+          {/* Recent Chats Skeleton */}
+          <div className="mb-12">
+            <Skeleton className="h-8 w-48 mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <RecentChatSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+
+          {/* All Agents Skeleton */}
+          <div>
+            <Skeleton className="h-8 w-32 mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border rounded-lg p-4">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-12 w-12 rounded-md shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-6 w-48" />
+                      <Skeleton className="h-4 w-full" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-20" />
+                        <Skeleton className="h-5 w-18" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-10 w-32" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

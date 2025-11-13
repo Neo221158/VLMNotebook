@@ -29,6 +29,12 @@ export function SiteHeader() {
               Home
             </Link>
             <Link
+              href="/documents"
+              className="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Documents
+            </Link>
+            <Link
               href="/docs"
               className="text-foreground/60 hover:text-foreground transition-colors"
             >

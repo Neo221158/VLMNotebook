@@ -6,7 +6,7 @@ A complete agentic coding boilerplate with authentication, PostgreSQL database, 
 
 - **🔐 Authentication**: Better Auth with Google OAuth integration
 - **🗃️ Database**: Drizzle ORM with PostgreSQL
-- **🤖 AI Integration**: Vercel AI SDK with OpenRouter (access to 100+ AI models)
+- **🤖 AI Integration**: Vercel AI SDK with Google Gemini (with File Search for RAG)
 - **🎨 UI Components**: shadcn/ui with Tailwind CSS
 - **⚡ Modern Stack**: Next.js 15, React 19, TypeScript
 - **📱 Responsive**: Mobile-first design approach
@@ -105,11 +105,11 @@ BETTER_AUTH_SECRET="your-random-32-character-secret-key-here"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# AI Integration via OpenRouter (Optional - for chat functionality)
-# Get your API key from: https://openrouter.ai/settings/keys
-# View available models at: https://openrouter.ai/models
-OPENROUTER_API_KEY="sk-or-v1-your-openrouter-api-key-here"
-OPENROUTER_MODEL="openai/gpt-5-mini"
+# AI Integration - Google Gemini (Required for chat and RAG functionality)
+# Get your API key from: https://aistudio.google.com/apikey
+# File Search documentation: https://ai.google.dev/gemini-api/docs/file-search
+GOOGLE_GENERATIVE_AI_API_KEY="your-api-key-here"
+GEMINI_MODEL="gemini-2.5-flash"
 
 # App URL (for production deployments)
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
@@ -154,14 +154,16 @@ Your application will be available at [http://localhost:3000](http://localhost:3
    - `https://yourdomain.com/api/auth/callback/google` (production)
 6. Copy the **Client ID** and **Client Secret** to your `.env` file
 
-### OpenRouter API Key
+### Google Gemini API Key
 
-1. Go to <a href="https://openrouter.ai/" target="_blank">OpenRouter</a>
-2. Sign up or log in to your account
-3. Navigate to **Settings** → **Keys** or visit <a href="https://openrouter.ai/settings/keys" target="_blank">Keys Settings</a>
-4. Click **Create Key** and give it a name
-5. Copy the API key and add it to your `.env` file as `OPENROUTER_API_KEY`
-6. Browse available models at <a href="https://openrouter.ai/models" target="_blank">OpenRouter Models</a>
+1. Go to <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>
+2. Sign in with your Google account
+3. Click **Create API Key** (or **Get API key**)
+4. Select a Google Cloud project (or create a new one)
+5. Copy the API key and add it to your `.env` file as `GOOGLE_GENERATIVE_AI_API_KEY`
+6. Learn about File Search RAG at <a href="https://ai.google.dev/gemini-api/docs/file-search" target="_blank">File Search Documentation</a>
+
+**Note:** File Search (for RAG capabilities) only works with `gemini-2.5-pro` and `gemini-2.5-flash` models.
 
 ## 🗂️ Project Structure
 
@@ -204,7 +206,7 @@ npm run db:reset     # Reset database (drop all tables)
 
 - **Home (`/`)**: Landing page with setup instructions and features overview
 - **Dashboard (`/dashboard`)**: Protected user dashboard with profile information
-- **Chat (`/chat`)**: AI-powered chat interface using OpenRouter (requires authentication)
+- **Chat (`/chat`)**: AI-powered chat interface using Google Gemini (requires authentication)
 
 ## 🚀 Deployment
 
@@ -233,8 +235,8 @@ Ensure these are set in your production environment:
 - `BETTER_AUTH_SECRET` - Secure random 32+ character string
 - `GOOGLE_CLIENT_ID` - Google OAuth Client ID
 - `GOOGLE_CLIENT_SECRET` - Google OAuth Client Secret
-- `OPENROUTER_API_KEY` - OpenRouter API key (optional, for AI chat functionality)
-- `OPENROUTER_MODEL` - Model name from OpenRouter (optional, defaults to openai/gpt-5-mini)
+- `GOOGLE_GENERATIVE_AI_API_KEY` - Google Gemini API key (required for AI chat and RAG functionality)
+- `GEMINI_MODEL` - Gemini model name (gemini-2.5-flash or gemini-2.5-pro)
 - `NEXT_PUBLIC_APP_URL` - Your production domain
 
 ## 🎥 Tutorial Video

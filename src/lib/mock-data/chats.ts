@@ -1,4 +1,4 @@
-import { ChatConversation, ChatMessage } from "@/lib/types";
+import { ChatConversation } from "@/lib/types";
 
 // Mock chat conversations (recent chats)
 export const mockChats: ChatConversation[] = [
@@ -80,6 +80,10 @@ export function getChatById(id: string): ChatConversation | undefined {
 // Helper function to get recent chats (sorted by lastMessageAt)
 export function getRecentChats(limit: number = 10): ChatConversation[] {
   return [...mockChats]
-    .sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime())
+    .sort((a, b) => {
+      const aTime = a.lastMessageAt?.getTime() ?? 0;
+      const bTime = b.lastMessageAt?.getTime() ?? 0;
+      return bTime - aTime;
+    })
     .slice(0, limit);
 }

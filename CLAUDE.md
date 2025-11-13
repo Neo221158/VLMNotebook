@@ -7,27 +7,36 @@ This is a Next.js 15 boilerplate for building AI-powered applications with authe
 ### Tech Stack
 
 - **Framework**: Next.js 15 with App Router, React 19, TypeScript
-- **AI Integration**: Vercel AI SDK 5 + OpenRouter (access to 100+ AI models)
+- **AI Integration**: Vercel AI SDK 5 + Google Gemini (with File Search for RAG)
 - **Authentication**: BetterAuth with Google OAuth
 - **Database**: PostgreSQL with Drizzle ORM
 - **UI**: shadcn/ui components with Tailwind CSS 4
 - **Styling**: Tailwind CSS with dark mode support (next-themes)
 
-## AI Integration with OpenRouter
+## AI Integration with Google Gemini
 
 ### Key Points
 
-- This project uses **OpenRouter** as the AI provider, NOT direct OpenAI
-- OpenRouter provides access to 100+ AI models through a single unified API
-- Default model: `openai/gpt-5-mini` (configurable via `OPENROUTER_MODEL` env var)
-- Users browse models at: https://openrouter.ai/models
-- Users get API keys from: https://openrouter.ai/settings/keys
+- This project uses **Google Gemini** as the AI provider with built-in File Search for RAG
+- Gemini File Search provides fully managed RAG without needing separate vector databases
+- Default model: `gemini-2.5-flash` (configurable via `GEMINI_MODEL` env var)
+- Supported models for File Search: `gemini-2.5-pro`, `gemini-2.5-flash`
+- Get API keys from: https://aistudio.google.com/apikey
+- File Search documentation: https://ai.google.dev/gemini-api/docs/file-search
 
 ### AI Implementation Files
 
-- `src/app/api/chat/route.ts` - Chat API endpoint using OpenRouter
-- Package: `@openrouter/ai-sdk-provider` (not `@ai-sdk/openai`)
-- Import: `import { openrouter } from "@openrouter/ai-sdk-provider"`
+- `src/app/api/chat/route.ts` - Chat API endpoint using Google Gemini
+- Package: `@ai-sdk/google` (not `@ai-sdk/openai`)
+- Import: `import { createGoogleGenerativeAI } from "@ai-sdk/google"`
+
+### File Search RAG Capabilities
+
+- Upload documents (PDF, DOCX, TXT, JSON, code files) up to 100MB each
+- Automatic chunking, embedding generation, and semantic search
+- Built-in citations showing which documents informed the response
+- Persistent storage with metadata filtering
+- Free storage and query embeddings (only pay for indexing: $0.15/1M tokens)
 
 ## Project Structure
 
@@ -36,7 +45,7 @@ src/
 ├── app/                          # Next.js App Router
 │   ├── api/
 │   │   ├── auth/[...all]/       # Better Auth catch-all route
-│   │   ├── chat/route.ts        # AI chat endpoint (OpenRouter)
+│   │   ├── chat/route.ts        # AI chat endpoint (Google Gemini)
 │   │   └── diagnostics/         # System diagnostics
 │   ├── chat/page.tsx            # AI chat interface (protected)
 │   ├── dashboard/page.tsx       # User dashboard (protected)
@@ -86,9 +95,9 @@ BETTER_AUTH_SECRET=32-char-random-string
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# AI via OpenRouter
-OPENROUTER_API_KEY=sk-or-v1-your-key
-OPENROUTER_MODEL=openai/gpt-5-mini  # or any model from openrouter.ai/models
+# AI via Google Gemini
+GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here
+GEMINI_MODEL=gemini-2.5-flash  # or gemini-2.5-pro
 
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -135,11 +144,12 @@ The project includes technical documentation in `docs/`:
    - If you need dev server output, ask the user to provide it
    - Don't run `npm run dev` or `pnpm dev`
 
-3. **Use OpenRouter, NOT OpenAI directly**
+3. **Use Google Gemini with File Search**
 
-   - Import from `@openrouter/ai-sdk-provider`
-   - Use `openrouter()` function, not `openai()`
-   - Model names follow OpenRouter format: `provider/model-name`
+   - Import from `@ai-sdk/google`
+   - Use `createGoogleGenerativeAI()` function
+   - Model names: `gemini-2.5-flash` or `gemini-2.5-pro`
+   - File Search only works with Gemini 2.5 models
 
 4. **Styling Guidelines**
 
@@ -215,7 +225,7 @@ The project includes technical documentation in `docs/`:
 1. Backend: `src/app/api/chat/route.ts`
 2. Frontend: `src/app/chat/page.tsx`
 3. Reference streaming docs: `docs/technical/ai/streaming.md`
-4. Remember to use OpenRouter, not direct OpenAI
+4. Remember to use Google Gemini with File Search for RAG capabilities
 
 ## Package Manager
 
@@ -223,3 +233,4 @@ This project uses **pnpm** (see `pnpm-lock.yaml`). When running commands:
 
 - Use `pnpm` instead of `npm` when possible
 - Scripts defined in package.json work with `pnpm run [script]`
+- please always remember to update the specs/rag-agent-chat-saas/implementation-plan.md file after you've done implenting. DONT create a new file.

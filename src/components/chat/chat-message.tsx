@@ -1,19 +1,43 @@
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Bot, User } from "lucide-react";
+import { CitationsList, Citation } from "./citations-list";
 
 interface ChatMessageProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
+  const content = message.parts
+    ?.map((p) => (p.type === "text" ? p.text : ""))
+    .join("") || "";
+
+  // Extract citations from message parts or toolInvocations
+  // Citations could be in different formats depending on Gemini's response
+  const citations: Citation[] = [];
+
+  // Check if message has experimental_providerMetadata with citations
+  const metadata = (message as unknown as {experimental_providerMetadata?: {citations?: Citation[]}}).experimental_providerMetadata;
+  if (metadata?.citations) {
+    citations.push(...metadata.citations);
+  }
+
+  // Also check toolInvocations for File Search results
+  const toolInvocations = (message as {toolInvocations?: Array<{toolName?: string; result?: {citations?: Citation[]}}>}).toolInvocations;
+  if (toolInvocations && Array.isArray(toolInvocations)) {
+    toolInvocations.forEach((invocation) => {
+      if (invocation?.toolName === "fileSearch" && invocation.result?.citations) {
+        citations.push(...invocation.result.citations);
+      }
+    });
+  }
 
   return (
     <div
       className={cn(
-        "flex gap-3 px-4 py-6",
+        "flex gap-3 px-4 py-6 animate-in fade-in slide-in-from-bottom-2 duration-300",
         isUser ? "bg-background" : "bg-muted/30"
       )}
     >
@@ -94,8 +118,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 ),
               }}
             >
-              {message.content}
+              {content}
             </ReactMarkdown>
+            {/* Citations */}
+            {!isUser && citations.length > 0 && (
+              <CitationsList citations={citations} />
+            )}
           </div>
         </div>
       </div>

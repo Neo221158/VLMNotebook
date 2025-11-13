@@ -30,7 +30,9 @@ export function RecentChatItem({ chat }: RecentChatItemProps) {
                 {chat.preview}
               </p>
               <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(chat.lastMessageAt, { addSuffix: true })}
+                {chat.lastMessageAt || chat.timestamp
+                  ? formatDistanceToNow(chat.lastMessageAt || chat.timestamp || new Date(), { addSuffix: true })
+                  : "Recently"}
               </span>
             </div>
           </div>

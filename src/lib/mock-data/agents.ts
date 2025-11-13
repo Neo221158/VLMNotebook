@@ -22,6 +22,14 @@ export const agents: Agent[] = [
       "Help me understand the methodology in this study",
     ],
     color: "blue",
+    fileSearchEnabled: true,
+    suggestedDocuments: [
+      "Research papers (PDF)",
+      "Academic articles",
+      "Technical documentation",
+      "Literature review notes",
+      "Study datasets (CSV, JSON)",
+    ],
   },
   {
     id: "code-review-agent",
@@ -44,6 +52,14 @@ export const agents: Agent[] = [
       "Suggest improvements for this API design",
     ],
     color: "green",
+    fileSearchEnabled: true,
+    suggestedDocuments: [
+      "Source code files (.js, .ts, .py, etc.)",
+      "Configuration files",
+      "Package manifests (package.json, requirements.txt)",
+      "Documentation files",
+      "Test files",
+    ],
   },
   {
     id: "legal-advisor",
@@ -66,6 +82,14 @@ export const agents: Agent[] = [
       "What risks should I be aware of in this contract?",
     ],
     color: "purple",
+    fileSearchEnabled: true,
+    suggestedDocuments: [
+      "Contracts (PDF, DOCX)",
+      "Legal agreements",
+      "Terms of service documents",
+      "Privacy policies",
+      "Compliance regulations",
+    ],
   },
   {
     id: "data-analyst",
@@ -88,6 +112,14 @@ export const agents: Agent[] = [
       "Help me identify outliers in this dataset",
     ],
     color: "orange",
+    fileSearchEnabled: true,
+    suggestedDocuments: [
+      "CSV datasets",
+      "Excel spreadsheets (.xlsx)",
+      "JSON data files",
+      "Statistical reports (PDF)",
+      "Data dictionaries and documentation",
+    ],
   },
   {
     id: "content-writer",
@@ -110,6 +142,14 @@ export const agents: Agent[] = [
       "Suggest engaging titles for my article",
     ],
     color: "pink",
+    fileSearchEnabled: true,
+    suggestedDocuments: [
+      "Draft articles (DOCX, TXT, Markdown)",
+      "Style guides (PDF)",
+      "Brand guidelines",
+      "Content briefs",
+      "Competitor content samples",
+    ],
   },
 ];
 
