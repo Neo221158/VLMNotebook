@@ -3,6 +3,9 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { uploadDocument, getStoreByAgentId } from "@/lib/gemini-file-search";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 // Maximum file size: 100MB (Gemini API limit)
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 

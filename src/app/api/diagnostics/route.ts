@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 type StatusLevel = "ok" | "warn" | "error";
 
 interface DiagnosticsResponse {

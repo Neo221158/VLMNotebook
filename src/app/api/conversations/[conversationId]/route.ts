@@ -5,6 +5,9 @@ import { db } from "@/lib/db";
 import { conversations, messages } from "@/lib/schema";
 import { eq, asc } from "drizzle-orm";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/conversations/[conversationId]
  * Fetch a single conversation with all messages

@@ -19,6 +19,12 @@
 - **Document Management UI** - Comprehensive document management interface with cards, modals, and chat integration
 - **Performance Optimization** - Database indexes added for optimal query performance
 - **Quality Assurance** - All lint, typecheck, and build checks passing
+- **Security Improvements** - Better Auth security fixes (Phase 1 complete - 2025-11-13)
+  - Added nextCookies plugin to Better Auth configuration
+  - Created reusable `requireAuth()` helper for server-side authentication
+  - Converted all protected routes (dashboard, profile, chat) to Server Components
+  - All routes now use server-side authentication validation
+  - See: `/specs/better-auth-security-improvements/` for details
 
 ### 📊 Progress
 **15 of 15 phases complete (100%)**
@@ -1445,18 +1451,20 @@ Phases 16-17 address key weaknesses identified in comprehensive code review and 
 - [ ] Verify citations display correctly
 - [ ] Add click handler to scroll to cited documents
 
-#### 17.4: Add Route Segment Configurations (MEDIUM PRIORITY)
+#### 17.4: Add Route Segment Configurations ✅ COMPLETE (2025-11-13)
 
-- [ ] Add `export const dynamic = 'force-dynamic'` to all API routes:
-  - [ ] `src/app/api/chat/route.ts`
-  - [ ] `src/app/api/conversations/route.ts`
-  - [ ] `src/app/api/conversations/[conversationId]/route.ts`
-  - [ ] `src/app/api/conversations/[conversationId]/messages/route.ts`
-  - [ ] `src/app/api/files/route.ts`
-  - [ ] `src/app/api/files/upload/route.ts`
-  - [ ] `src/app/api/files/[fileId]/route.ts`
-- [ ] Add `export const runtime = 'nodejs'` where appropriate
-- [ ] Document reasoning for configurations
+- [x] Add `export const dynamic = 'force-dynamic'` to all API routes:
+  - [x] `src/app/api/chat/route.ts`
+  - [x] `src/app/api/conversations/route.ts`
+  - [x] `src/app/api/conversations/[conversationId]/route.ts`
+  - [x] `src/app/api/conversations/[conversationId]/messages/route.ts`
+  - [x] `src/app/api/files/route.ts`
+  - [x] `src/app/api/files/upload/route.ts`
+  - [x] `src/app/api/files/[fileId]/route.ts`
+  - [x] `src/app/api/diagnostics/route.ts`
+- [x] Document reasoning for configurations
+
+**Note:** Added `export const dynamic = "force-dynamic"` to prevent Next.js from evaluating these routes during build time. This fixes build errors where routes tried to connect to database or external services during static generation.
 
 #### 17.5: Implement Rate Limiting (MEDIUM PRIORITY)
 
@@ -1684,3 +1692,25 @@ pnpm init:stores
 | 2.0 | 2025-11-12 | Claude | Added RAG implementation phases (Phases 9-15) |
 | 2.1 | 2025-11-12 | Claude | Completed Phase 9 (RAG Infrastructure), added quick reference |
 | 2.2 | 2025-11-13 | Claude | Added Phase 16 (UX/UI Polish) and Phase 17 (Backend Integration) based on comprehensive code review |
+
+---
+
+## Related Features
+
+### Better Auth Security Improvements
+
+**Status:** 📋 Planning Complete
+**Priority:** 🚨 CRITICAL
+**Location:** `/specs/better-auth-security-improvements/`
+
+A critical security feature that addresses vulnerabilities in the current authentication implementation. This should be implemented before deploying to production.
+
+**Key Issues:**
+- Protected routes use client-side only authentication (can be bypassed)
+- Missing nextCookies plugin for proper cookie handling
+- Component architecture needs improvement
+
+**Estimated Time:** 6-8 hours
+
+See `/specs/better-auth-security-improvements/README.md` for details.
+

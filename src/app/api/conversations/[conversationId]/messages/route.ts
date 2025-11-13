@@ -5,6 +5,9 @@ import { db } from "@/lib/db";
 import { conversations, messages } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/conversations/[conversationId]/messages
  * Save a new message to a conversation

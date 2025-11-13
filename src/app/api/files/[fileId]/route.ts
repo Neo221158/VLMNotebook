@@ -3,6 +3,9 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { deleteDocument } from "@/lib/gemini-file-search";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 /**
  * DELETE /api/files/[fileId]
  * Delete a document

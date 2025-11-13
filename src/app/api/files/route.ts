@@ -3,6 +3,9 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { listDocuments, getStoreByAgentId } from "@/lib/gemini-file-search";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/files?agentId=xxx
  * List documents for a specific agent and user

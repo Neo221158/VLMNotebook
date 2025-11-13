@@ -3,6 +3,9 @@ import { streamText, UIMessage, convertToModelMessages } from "ai";
 import { getSystemPromptText } from "@/lib/agent-prompts";
 import { getStoreByAgentId } from "@/lib/gemini-file-search";
 
+// Mark this route as dynamic (don't evaluate during build)
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     // Validate request body
