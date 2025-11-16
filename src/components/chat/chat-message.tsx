@@ -2,7 +2,8 @@ import { UIMessage } from "ai";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Bot, User } from "lucide-react";
-import { CitationsList, Citation } from "./citations-list";
+import { CitationsList } from "./citations-list";
+import type { Citation } from "@/lib/types";
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -10,21 +11,27 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === "user";
+  // Extract text from message parts
   const content = message.parts
     ?.map((p) => (p.type === "text" ? p.text : ""))
     .join("") || "";
 
-  // Extract citations from message parts or toolInvocations
-  // Citations could be in different formats depending on Gemini's response
+  // Extract citations from message (multiple possible sources)
   const citations: Citation[] = [];
 
-  // Check if message has experimental_providerMetadata with citations
+  // Priority 1: Check if message has citations from database
+  const messageCitations = (message as unknown as {citations?: Citation[]}).citations;
+  if (messageCitations && Array.isArray(messageCitations)) {
+    citations.push(...messageCitations);
+  }
+
+  // Priority 2: Check if message has experimental_providerMetadata with citations
   const metadata = (message as unknown as {experimental_providerMetadata?: {citations?: Citation[]}}).experimental_providerMetadata;
   if (metadata?.citations) {
     citations.push(...metadata.citations);
   }
 
-  // Also check toolInvocations for File Search results
+  // Priority 3: Also check toolInvocations for File Search results
   const toolInvocations = (message as {toolInvocations?: Array<{toolName?: string; result?: {citations?: Citation[]}}>}).toolInvocations;
   if (toolInvocations && Array.isArray(toolInvocations)) {
     toolInvocations.forEach((invocation) => {

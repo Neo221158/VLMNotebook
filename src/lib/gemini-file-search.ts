@@ -2,6 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { db } from "./db";
 import { fileSearchStores, documents } from "./schema";
 import { eq, and } from "drizzle-orm";
+import { logger } from "./logger";
+import { fileSearchStoreCache } from "./file-search-cache";
 
 // Initialize Google GenAI client
 const ai = new GoogleGenAI({
@@ -48,16 +50,24 @@ export async function createFileSearchStore(
       createdAt: dbStore.createdAt,
     };
   } catch (error) {
-    console.error("Error creating File Search store:", error);
+    logger.error("Error creating File Search store", { error, agentId, name });
     throw error;
   }
 }
 
 /**
  * Get File Search store for an agent (or create if doesn't exist)
+ * Uses in-memory cache to reduce database queries
  */
 export async function getStoreByAgentId(agentId: string) {
   try {
+    // Check cache first
+    const cached = fileSearchStoreCache.get(agentId);
+    if (cached) {
+      logger.debug("File Search store found in cache", { agentId, storeId: cached.storeId });
+      return cached;
+    }
+
     // Check if store exists in database
     const [existingStore] = await db
       .select()
@@ -66,7 +76,7 @@ export async function getStoreByAgentId(agentId: string) {
       .limit(1);
 
     if (existingStore) {
-      return {
+      const store = {
         id: existingStore.id,
         agentId: existingStore.agentId,
         storeId: existingStore.storeId,
@@ -74,16 +84,27 @@ export async function getStoreByAgentId(agentId: string) {
         description: existingStore.description,
         createdAt: existingStore.createdAt,
       };
+
+      // Cache the result
+      fileSearchStoreCache.set(store);
+      logger.debug("File Search store cached from database", { agentId, storeId: store.storeId });
+
+      return store;
     }
 
     // Create new store if doesn't exist
-    return await createFileSearchStore(
+    const newStore = await createFileSearchStore(
       agentId,
       `${agentId}-store`,
       `File Search store for ${agentId} agent`
     );
+
+    // Cache the newly created store
+    fileSearchStoreCache.set(newStore);
+
+    return newStore;
   } catch (error) {
-    console.error("Error getting File Search store:", error);
+    logger.error("Error getting File Search store", { error, agentId });
     throw error;
   }
 }
@@ -103,7 +124,7 @@ export async function listStores() {
       createdAt: store.createdAt,
     }));
   } catch (error) {
-    console.error("Error listing File Search stores:", error);
+    logger.error("Error listing File Search stores", { error });
     throw error;
   }
 }
@@ -124,7 +145,7 @@ export async function deleteStore(storeId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting File Search store:", error);
+    logger.error("Error deleting File Search store", { error, storeId });
     throw error;
   }
 }
@@ -236,7 +257,7 @@ export async function uploadDocument(
       throw error;
     }
   } catch (error) {
-    console.error("Error uploading document:", error);
+    logger.error("Error uploading document", { error, storeUuid, userId, filename: file.name });
     throw error;
   }
 }
@@ -264,7 +285,7 @@ export async function listDocuments(storeUuid: string, userId?: string) {
       uploadedAt: doc.uploadedAt,
     }));
   } catch (error) {
-    console.error("Error listing documents:", error);
+    logger.error("Error listing documents", { error, storeUuid, userId });
     throw error;
   }
 }
@@ -306,7 +327,7 @@ export async function deleteDocument(documentId: string, userId: string) {
           // Gemini files in stores are managed separately
         }
       } catch (error) {
-        console.error("Error deleting file from Gemini:", error);
+        logger.error("Error deleting file from Gemini", { error, documentId, fileId: doc.fileId });
         // Continue with database deletion even if Gemini deletion fails
       }
     }
@@ -316,7 +337,7 @@ export async function deleteDocument(documentId: string, userId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error("Error deleting document:", error);
+    logger.error("Error deleting document", { error, documentId, userId });
     throw error;
   }
 }

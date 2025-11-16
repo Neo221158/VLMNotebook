@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { uploadDocument, getStoreByAgentId } from "@/lib/gemini-file-search";
+import {
+  rateLimit,
+  RateLimitPresets,
+  createRateLimitResponse,
+  createRateLimitHeaders,
+} from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -82,12 +89,25 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
 
-    // 2. Parse multipart form data
+    // 2. Rate limiting: 10 uploads per 10 minutes
+    const rateLimitResult = rateLimit(
+      `file-upload:${userId}`,
+      RateLimitPresets.fileUpload
+    );
+
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        RateLimitPresets.fileUpload,
+        rateLimitResult
+      );
+    }
+
+    // 3. Parse multipart form data
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const agentId = formData.get("agentId") as string | null;
 
-    // 3. Validate required fields
+    // 4. Validate required fields
     if (!file) {
       return NextResponse.json(
         { error: "No file provided" },
@@ -127,7 +147,7 @@ export async function POST(request: NextRequest) {
     try {
       store = await getStoreByAgentId(agentId);
     } catch (error) {
-      console.error("Failed to get File Search store:", error);
+      logger.error("Failed to get File Search store:", error);
       return NextResponse.json(
         { error: "Failed to access agent's document storage. Please try again later." },
         { status: 500 }
@@ -150,7 +170,7 @@ export async function POST(request: NextRequest) {
 
       document = await uploadDocument(store.id, userId, file, metadata);
     } catch (error) {
-      console.error("Failed to upload document:", error);
+      logger.error("Failed to upload document:", error);
       return NextResponse.json(
         {
           error: error instanceof Error ? error.message : "Failed to upload file. Please try again."
@@ -159,7 +179,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 8. Return success response
+    // 8. Return success response with rate limit headers
     return NextResponse.json(
       {
         success: true,
@@ -172,10 +192,16 @@ export async function POST(request: NextRequest) {
           uploadedAt: document.uploadedAt,
         },
       },
-      { status: 201 }
+      {
+        status: 201,
+        headers: createRateLimitHeaders(
+          RateLimitPresets.fileUpload,
+          rateLimitResult
+        ),
+      }
     );
   } catch (error) {
-    console.error("Upload error:", error);
+    logger.error("Upload error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

@@ -1,8 +1,7 @@
 import { Agent } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MoreVertical, FileText } from "lucide-react";
+import { ArrowLeft, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,11 +11,9 @@ import {
 
 interface ChatHeaderProps {
   agent: Agent;
-  documentCount?: number;
-  onOpenDocuments?: () => void;
 }
 
-export function ChatHeader({ agent, documentCount, onOpenDocuments }: ChatHeaderProps) {
+export function ChatHeader({ agent }: ChatHeaderProps) {
   return (
     <header className="sticky top-16 z-40 border-b bg-background">
       <div className="container mx-auto px-4 py-3">
@@ -38,24 +35,6 @@ export function ChatHeader({ agent, documentCount, onOpenDocuments }: ChatHeader
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Document Manager Button */}
-            {onOpenDocuments && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenDocuments}
-                className="gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Documents</span>
-                {documentCount !== undefined && documentCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
-                    {documentCount}
-                  </Badge>
-                )}
-              </Button>
-            )}
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Chat options">

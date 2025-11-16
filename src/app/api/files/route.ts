@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { listDocuments, getStoreByAgentId } from "@/lib/gemini-file-search";
+import { logger } from "@/lib/logger";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     try {
       store = await getStoreByAgentId(agentId);
     } catch (error) {
-      console.error("Failed to get File Search store:", error);
+      logger.error("Failed to get File Search store:", error);
       return NextResponse.json(
         { error: "Failed to access agent's document storage." },
         { status: 500 }
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     try {
       documents = await listDocuments(store.id, userId);
     } catch (error) {
-      console.error("Failed to list documents:", error);
+      logger.error("Failed to list documents:", error);
       return NextResponse.json(
         { error: "Failed to retrieve documents. Please try again." },
         { status: 500 }
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("List documents error:", error);
+    logger.error("List documents error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

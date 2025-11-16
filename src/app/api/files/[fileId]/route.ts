@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { deleteDocument } from "@/lib/gemini-file-search";
+import { logger } from "@/lib/logger";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ export async function DELETE(
     try {
       await deleteDocument(fileId, userId);
     } catch (error) {
-      console.error("Failed to delete document:", error);
+      logger.error("Failed to delete document:", error);
 
       // Check if error is due to ownership
       if (error instanceof Error && error.message.includes("not found")) {
@@ -68,7 +69,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Delete document error:", error);
+    logger.error("Delete document error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
       { status: 500 }

@@ -1,13 +1,7 @@
 import { FileText, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-export interface Citation {
-  documentName?: string;
-  documentId?: string;
-  excerpt?: string;
-  pageNumber?: number;
-}
+import type { Citation } from "@/lib/types";
 
 interface CitationsListProps {
   citations: Citation[];
@@ -59,21 +53,17 @@ export function CitationsList({ citations }: CitationsListProps) {
                   {citation.documentName && (
                     <p className="font-medium text-foreground">
                       {citation.documentName}
-                      {citation.pageNumber && (
-                        <span className="text-muted-foreground ml-1">
-                          (Page {citation.pageNumber})
+                      {citation.confidence && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          (Confidence: {(citation.confidence * 100).toFixed(0)}%)
                         </span>
                       )}
                     </p>
                   )}
-                  {citation.excerpt && (
+                  {citation.chunkText && (
                     <p className="text-muted-foreground italic line-clamp-3">
-                      &quot;{citation.excerpt}&quot;
-                    </p>
-                  )}
-                  {citation.documentId && (
-                    <p className="text-xs text-muted-foreground font-mono">
-                      ID: {citation.documentId}
+                      &quot;{citation.chunkText.substring(0, 300)}
+                      {citation.chunkText.length > 300 ? "..." : ""}&quot;
                     </p>
                   )}
                 </div>

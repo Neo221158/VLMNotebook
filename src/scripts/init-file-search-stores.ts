@@ -4,7 +4,7 @@
  * This script creates a File Search store for each agent in the system.
  * Run this once during initial setup or when adding new agents.
  *
- * Usage: pnpm tsx src/scripts/init-file-search-stores.ts
+ * Usage: pnpm init:stores
  */
 
 import { agents } from "@/lib/mock-data/agents";

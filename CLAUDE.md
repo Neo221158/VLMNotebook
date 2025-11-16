@@ -38,6 +38,35 @@ This is a Next.js 15 boilerplate for building AI-powered applications with authe
 - Persistent storage with metadata filtering
 - Free storage and query embeddings (only pay for indexing: $0.15/1M tokens)
 
+### IMPORTANT: Document-Only RAG Configuration
+
+⚠️ **Critical Discovery (2025-11-15):** Google Gemini File Search does **NOT** have a built-in "strict mode" that restricts the model to only use uploaded documents.
+
+**How File Search Actually Works:**
+- File Search is designed as **Retrieval-Augmented Generation (RAG)**
+- It *supplements* the model's responses with uploaded documents
+- It does **NOT** *prevent* the model from using its general training knowledge
+- Think of it as "grounding + general knowledge" rather than "grounding only"
+
+**Our Solution:**
+To enforce document-only responses, we use **very explicit system prompts** in `src/lib/agent-prompts.ts`:
+
+```typescript
+CRITICAL INSTRUCTION - DOCUMENT-ONLY RESPONSES:
+You MUST ONLY use information that is explicitly found in the uploaded documents
+provided to you through File Search. DO NOT use your general knowledge, training
+data, or any external information sources.
+```
+
+**Limitations:**
+- LLMs are not 100% deterministic - the model may occasionally reference general knowledge
+- Always monitor citations to verify the model is using uploaded documents
+- For production use cases requiring strict document-only responses, test thoroughly
+
+**References:**
+- [Gemini File Search Docs](https://ai.google.dev/gemini-api/docs/file-search)
+- [Gemini Grounding Options](https://ai.google.dev/gemini-api/docs/grounding)
+
 ## Project Structure
 
 ```

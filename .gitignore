@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Veterinary documents (exclude actual files, keep README)
+vet-documents/*
+!vet-documents/README.md

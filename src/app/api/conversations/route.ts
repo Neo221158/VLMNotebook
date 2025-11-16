@@ -3,7 +3,14 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { conversations, messages } from "@/lib/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
+import {
+  rateLimit,
+  RateLimitPresets,
+  createRateLimitResponse,
+  createRateLimitHeaders,
+} from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -21,6 +28,19 @@ export async function POST(req: Request) {
 
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting: 5 conversation creations per minute
+    const rateLimitResult = rateLimit(
+      `conversation-create:${session.user.id}`,
+      RateLimitPresets.conversationCreate
+    );
+
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        RateLimitPresets.conversationCreate,
+        rateLimitResult
+      );
     }
 
     const body = await req.json();
@@ -43,16 +63,24 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    return NextResponse.json({
-      id: conversation.id,
-      userId: conversation.userId,
-      agentId: conversation.agentId,
-      title: conversation.title,
-      createdAt: conversation.createdAt,
-      updatedAt: conversation.updatedAt,
-    });
+    return NextResponse.json(
+      {
+        id: conversation.id,
+        userId: conversation.userId,
+        agentId: conversation.agentId,
+        title: conversation.title,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+      },
+      {
+        headers: createRateLimitHeaders(
+          RateLimitPresets.conversationCreate,
+          rateLimitResult
+        ),
+      }
+    );
   } catch (error) {
-    console.error("Error creating conversation:", error);
+    logger.error("Error creating conversation", { error });
     return NextResponse.json(
       { error: "Failed to create conversation" },
       { status: 500 }
@@ -87,52 +115,72 @@ export async function GET(req: Request) {
         )
       : eq(conversations.userId, session.user.id);
 
-    // Fetch conversations
-    const userConversations = await db
-      .select()
+    // Fetch conversations with message metadata in a single query
+    // This uses SQL subqueries to avoid N+1 query problem
+    const conversationsWithMeta = await db
+      .select({
+        id: conversations.id,
+        userId: conversations.userId,
+        agentId: conversations.agentId,
+        title: conversations.title,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+        // Subquery for last message content
+        lastMessageContent: sql<string | null>`(
+          SELECT content
+          FROM ${messages}
+          WHERE ${messages.conversationId} = ${conversations.id}
+          ORDER BY ${messages.createdAt} DESC
+          LIMIT 1
+        )`,
+        // Subquery for last message role
+        lastMessageRole: sql<string | null>`(
+          SELECT role
+          FROM ${messages}
+          WHERE ${messages.conversationId} = ${conversations.id}
+          ORDER BY ${messages.createdAt} DESC
+          LIMIT 1
+        )`,
+        // Subquery for last message timestamp
+        lastMessageCreatedAt: sql<Date | null>`(
+          SELECT created_at
+          FROM ${messages}
+          WHERE ${messages.conversationId} = ${conversations.id}
+          ORDER BY ${messages.createdAt} DESC
+          LIMIT 1
+        )`,
+        // Subquery for message count
+        messageCount: sql<number>`(
+          SELECT COUNT(*)::int
+          FROM ${messages}
+          WHERE ${messages.conversationId} = ${conversations.id}
+        )`,
+      })
       .from(conversations)
       .where(conditions)
       .orderBy(desc(conversations.updatedAt));
 
-    // Get message preview and count for each conversation
-    const conversationsWithMeta = await Promise.all(
-      userConversations.map(async (conversation) => {
-        // Get last message
-        const [lastMessage] = await db
-          .select()
-          .from(messages)
-          .where(eq(messages.conversationId, conversation.id))
-          .orderBy(desc(messages.createdAt))
-          .limit(1);
+    // Format the response
+    const formattedConversations = conversationsWithMeta.map((conv) => ({
+      id: conv.id,
+      userId: conv.userId,
+      agentId: conv.agentId,
+      title: conv.title,
+      createdAt: conv.createdAt,
+      updatedAt: conv.updatedAt,
+      messageCount: conv.messageCount,
+      lastMessage: conv.lastMessageContent
+        ? {
+            content: conv.lastMessageContent.substring(0, 100), // Preview
+            role: conv.lastMessageRole!,
+            createdAt: conv.lastMessageCreatedAt!,
+          }
+        : null,
+    }));
 
-        // Get message count
-        const messageCount = await db
-          .select()
-          .from(messages)
-          .where(eq(messages.conversationId, conversation.id));
-
-        return {
-          id: conversation.id,
-          userId: conversation.userId,
-          agentId: conversation.agentId,
-          title: conversation.title,
-          createdAt: conversation.createdAt,
-          updatedAt: conversation.updatedAt,
-          messageCount: messageCount.length,
-          lastMessage: lastMessage
-            ? {
-                content: lastMessage.content.substring(0, 100), // Preview
-                role: lastMessage.role,
-                createdAt: lastMessage.createdAt,
-              }
-            : null,
-        };
-      })
-    );
-
-    return NextResponse.json(conversationsWithMeta);
+    return NextResponse.json(formattedConversations);
   } catch (error) {
-    console.error("Error fetching conversations:", error);
+    logger.error("Error fetching conversations", { error });
     return NextResponse.json(
       { error: "Failed to fetch conversations" },
       { status: 500 }

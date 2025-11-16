@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean, integer, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import type { Citation } from "@/lib/types";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -6,6 +7,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  role: text("role").notNull().default("user"), // Admin role management
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -113,6 +115,7 @@ export const messages = pgTable("messages", {
   role: text("role").notNull(), // user or assistant
   content: text("content").notNull(),
   parts: jsonb("parts"), // For tool calls and results
+  citations: jsonb("citations").$type<Citation[]>(), // Citations from File Search
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   conversationCreatedIdx: index("messages_conversation_created_idx").on(table.conversationId, table.createdAt),

@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { conversations, messages } from "@/lib/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
+import { logger } from "@/lib/logger";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -69,11 +70,12 @@ export async function GET(
         role: msg.role,
         content: msg.content,
         parts: msg.parts,
+        citations: msg.citations || [], // Include citations from database
         createdAt: msg.createdAt,
       })),
     });
   } catch (error) {
-    console.error("Error fetching conversation:", error);
+    logger.error("Error fetching conversation", { error });
     return NextResponse.json(
       { error: "Failed to fetch conversation" },
       { status: 500 }
@@ -123,15 +125,28 @@ export async function DELETE(
       );
     }
 
-    // Delete messages (cascade should handle this, but being explicit)
-    await db.delete(messages).where(eq(messages.conversationId, conversationId));
+    // Delete messages and conversation in a transaction
+    // This ensures both operations succeed or both fail
+    await db.transaction(async (tx) => {
+      // Delete messages first
+      await tx
+        .delete(messages)
+        .where(eq(messages.conversationId, conversationId));
 
-    // Delete conversation
-    await db.delete(conversations).where(eq(conversations.id, conversationId));
+      // Then delete conversation
+      await tx
+        .delete(conversations)
+        .where(
+          and(
+            eq(conversations.id, conversationId),
+            eq(conversations.userId, session.user.id)
+          )
+        );
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting conversation:", error);
+    logger.error("Error deleting conversation", { error });
     return NextResponse.json(
       { error: "Failed to delete conversation" },
       { status: 500 }

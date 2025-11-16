@@ -1,9 +1,20 @@
 import Link from "next/link";
-import { UserProfile } from "@/components/auth/user-profile";
+import { UserButton } from "@/components/auth/user-button";
 import { ModeToggle } from "./ui/mode-toggle";
 import { Bot } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import type { User } from "@/lib/types";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  // Get session server-side to check admin status
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  // Check if user is admin (using role from database)
+  const isAdmin = (session?.user as User | undefined)?.role === "admin";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -28,12 +39,15 @@ export function SiteHeader() {
             >
               Home
             </Link>
-            <Link
-              href="/documents"
-              className="text-foreground/60 hover:text-foreground transition-colors"
-            >
-              Documents
-            </Link>
+            {/* Documents link - admin only */}
+            {isAdmin && (
+              <Link
+                href="/documents"
+                className="text-foreground/60 hover:text-foreground transition-colors"
+              >
+                Documents
+              </Link>
+            )}
             <Link
               href="/docs"
               className="text-foreground/60 hover:text-foreground transition-colors"
@@ -49,7 +63,7 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <UserProfile />
+          <UserButton />
           <ModeToggle />
         </div>
       </div>
