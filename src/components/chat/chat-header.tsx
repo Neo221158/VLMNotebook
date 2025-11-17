@@ -1,6 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { Agent } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { ArrowLeft, MoreVertical, FileText } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -8,12 +11,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DocumentManagerSheet } from "@/components/files/document-manager-sheet";
 
 interface ChatHeaderProps {
   agent: Agent;
+  userId: string;
+  isAdmin: boolean;
 }
 
-export function ChatHeader({ agent }: ChatHeaderProps) {
+export function ChatHeader({ agent, userId, isAdmin }: ChatHeaderProps) {
+  const [documentsSheetOpen, setDocumentsSheetOpen] = useState(false);
+
+  // Debug logging
+  console.log("[ChatHeader] isAdmin prop:", isAdmin);
+  console.log("[ChatHeader] Should show upload button:", isAdmin);
+
   return (
     <header className="sticky top-16 z-40 border-b bg-background">
       <div className="container mx-auto px-4 py-3">
@@ -35,6 +47,18 @@ export function ChatHeader({ agent }: ChatHeaderProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Document manager - admin only */}
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setDocumentsSheetOpen(true)}
+                aria-label="Manage documents"
+              >
+                <FileText className="h-5 w-5" />
+                <span className="sr-only">Manage documents</span>
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Chat options">
@@ -53,6 +77,16 @@ export function ChatHeader({ agent }: ChatHeaderProps) {
           </div>
         </div>
       </div>
+      {/* Document manager sheet - only rendered for admin */}
+      {isAdmin && (
+        <DocumentManagerSheet
+          open={documentsSheetOpen}
+          onOpenChange={setDocumentsSheetOpen}
+          agentId={agent.id}
+          agentName={agent.name}
+          userId={userId}
+        />
+      )}
     </header>
   );
 }

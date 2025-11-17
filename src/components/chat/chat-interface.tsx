@@ -19,9 +19,10 @@ interface ChatInterfaceProps {
   agentId: string;
   userId: string;
   agent: Agent;
+  isAdmin: boolean;
 }
 
-export function ChatInterface({ agentId, userId, agent }: ChatInterfaceProps) {
+export function ChatInterface({ agentId, userId, agent, isAdmin }: ChatInterfaceProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -178,7 +179,7 @@ export function ChatInterface({ agentId, userId, agent }: ChatInterfaceProps) {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
       {/* Header */}
-      <ChatHeader agent={agent} />
+      <ChatHeader agent={agent} userId={userId} isAdmin={isAdmin} />
 
       {/* Messages Area */}
       <ScrollArea ref={scrollAreaRef} className="flex-1">

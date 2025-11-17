@@ -27,6 +27,7 @@ interface ProfileClientProps {
       image?: string | null
       emailVerified: boolean
       createdAt: Date
+      role?: string | null
     }
   }
 }
@@ -182,7 +183,9 @@ export function ProfileClient({ session }: ProfileClientProps) {
                           Your account access level
                         </p>
                       </div>
-                      <Badge variant="outline">Standard</Badge>
+                      <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                        {user.role === "admin" ? "Admin" : "Standard"}
+                      </Badge>
                     </div>
                   </div>
                 </div>

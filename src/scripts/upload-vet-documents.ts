@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { db } from "@/lib/db";
-import { fileSearchStores, documents } from "@/lib/schema";
+import { fileSearchStores, documents, user } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import * as fs from "fs";
 import * as path from "path";
@@ -20,7 +20,6 @@ const ai = new GoogleGenAI({
 async function uploadVetDocuments() {
   const agentId = "research-assistant"; // Change this to your veterinary agent ID
   const documentsPath = path.join(process.cwd(), "vet-documents");
-  const adminUserId = "admin"; // This should match your admin user ID from database
 
   console.log("🐾 Starting veterinary document upload...");
   console.log(`📁 Scanning directory: ${documentsPath}`);
@@ -31,6 +30,23 @@ async function uploadVetDocuments() {
     console.log("💡 Create it with: mkdir vet-documents");
     process.exit(1);
   }
+
+  // Get admin user from database
+  console.log("👤 Looking up admin user...");
+  const [adminUser] = await db
+    .select()
+    .from(user)
+    .where(eq(user.role, "admin"))
+    .limit(1);
+
+  if (!adminUser) {
+    console.error("❌ Error: No admin user found in database");
+    console.log("💡 Please sign in to the application first with an admin account");
+    console.log("   Admin users are configured via the ADMIN_EMAIL environment variable");
+    process.exit(1);
+  }
+
+  console.log(`✅ Found admin user: ${adminUser.email}`);
 
   // Get or verify File Search store for agent
   console.log(`🔍 Looking up File Search store for agent: ${agentId}`);
@@ -94,7 +110,7 @@ async function uploadVetDocuments() {
         .insert(documents)
         .values({
           storeId: store.id,
-          userId: adminUserId,
+          userId: adminUser.id,
           filename,
           fileId: "", // Will be updated after upload
           mimeType: getMimeType(filename),

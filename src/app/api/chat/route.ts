@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         fileSearchTool = {
           file_search: google.tools.fileSearch({
             fileSearchStoreNames: [fileSearchStore.storeId],
-            topK: 8,
+            topK: 10,
           }),
         };
       } catch (error) {

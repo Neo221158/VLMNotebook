@@ -1,18 +1,11 @@
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth-helpers";
 import { agents } from "@/lib/mock-data/agents";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgentDocumentsManager } from "@/components/documents/agent-documents-manager";
 
 export default async function DocumentsPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-
-  if (!session) {
-    redirect("/");
-  }
+  // Require admin access - redirects non-admins to dashboard
+  const session = await requireAdmin();
 
   const user = session.user;
 
