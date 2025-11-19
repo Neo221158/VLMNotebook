@@ -120,3 +120,25 @@ export const messages = pgTable("messages", {
 }, (table) => ({
   conversationCreatedIdx: index("messages_conversation_created_idx").on(table.conversationId, table.createdAt),
 }));
+
+// Rabies Authority Directory
+export const rabiesAuthorities = pgTable("rabies_authorities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  city: text("city").notNull(),
+  region: text("region"),
+  veterinarianName: text("veterinarian_name").notNull(),
+  reportingSoftware: text("reporting_software").notNull(),
+  softwareUrl: text("software_url"), // URL for the reporting software
+  contactEmail: text("contact_email").notNull(),
+  phoneNumber: text("phone_number"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => ({
+  // Indexes for fast city/region searches
+  cityIdx: index("rabies_authorities_city_idx").on(table.city),
+  regionIdx: index("rabies_authorities_region_idx").on(table.region),
+}));

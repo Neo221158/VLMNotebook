@@ -1,0 +1,1 @@
+ALTER TABLE "rabies_authorities" ADD COLUMN "software_url" text;

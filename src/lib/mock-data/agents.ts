@@ -151,6 +151,30 @@ export const agents: Agent[] = [
       "Competitor content samples",
     ],
   },
+  {
+    id: "rabies-auth-finder",
+    name: "Rabies Authority Finder",
+    description:
+      "Chat with an AI assistant to find rabies reporting authorities, veterinarians, and contact information by city or region. Get instant access to reporting software, email contacts, and phone numbers from our database of 165+ Israeli authorities.",
+    icon: "🏛️",
+    category: "Veterinary & Public Health",
+    tags: ["Rabies", "Veterinary", "Public Health", "Authorities", "Database"],
+    useCases: [
+      "Find rabies reporting authority for any city in Israel",
+      "Get regional veterinarian contact information",
+      "Find out which reporting software is used in your area",
+      "Access email and phone contacts for rabies authorities",
+    ],
+    sampleQuestions: [
+      "What's the rabies authority in Tel Aviv?",
+      "Who handles rabies reporting in Jerusalem?",
+      "How do I contact the veterinarian for Haifa?",
+      "What software does Be'er Sheva use for rabies reporting?",
+      "Give me the contact info for the Eilat rabies authority",
+    ],
+    color: "blue",
+    fileSearchEnabled: false, // This is database-backed, not File Search
+  },
 ];
 
 // Helper function to get agent by ID

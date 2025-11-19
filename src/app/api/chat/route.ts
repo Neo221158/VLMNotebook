@@ -1,5 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { streamText, UIMessage, convertToModelMessages } from "ai";
+import { streamText, UIMessage, convertToModelMessages, tool } from "ai";
 import { getSystemPromptText } from "@/lib/agent-prompts";
 import { getStoreByAgentId } from "@/lib/gemini-file-search";
 import { extractCitations } from "@/lib/extract-citations";
@@ -7,6 +7,8 @@ import { rateLimit, RateLimitPresets, createRateLimitResponse } from "@/lib/rate
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { logger } from "@/lib/logger";
+import { searchRabiesAuthorityTool } from "@/lib/tools/search-rabies-authority";
+import { z } from "zod";
 
 // Mark this route as dynamic (don't evaluate during build)
 export const dynamic = "force-dynamic";
@@ -57,26 +59,43 @@ export async function POST(req: Request) {
 
     // Get system prompt for agent (if agentId provided)
     let systemPrompt = "";
-    let fileSearchTool = undefined;
+    let tools = undefined;
     let fileSearchStore = undefined; // Store reference for citation extraction
 
     if (agentId) {
       systemPrompt = getSystemPromptText(agentId);
 
-      // Configure File Search tool for document-grounded responses
-      try {
-        fileSearchStore = await getStoreByAgentId(agentId);
-        logger.info("File Search store available", { storeId: fileSearchStore.storeId, agentId });
-
-        fileSearchTool = {
-          file_search: google.tools.fileSearch({
-            fileSearchStoreNames: [fileSearchStore.storeId],
-            topK: 10,
-          }),
+      // Special handling for rabies authority agent (database-backed)
+      if (agentId === "rabies-auth-finder") {
+        // Database-backed agent uses custom tool
+        tools = {
+          searchRabiesAuthority: tool({
+            description: searchRabiesAuthorityTool.description,
+            parameters: searchRabiesAuthorityTool.inputSchema,
+            // @ts-expect-error - AI SDK tool typing incompatibility with Google provider
+            execute: async ({ query }: z.infer<typeof searchRabiesAuthorityTool.inputSchema>) => {
+              return await searchRabiesAuthorityTool.execute({ query });
+            },
+          })
         };
-      } catch (error) {
-        logger.error("Error getting File Search store", { error, agentId });
-        // Continue without File Search if store retrieval fails
+
+        logger.info("Rabies authority agent with database tool", { agentId });
+      } else {
+        // Other agents may use File Search
+        try {
+          fileSearchStore = await getStoreByAgentId(agentId);
+          logger.info("File Search store available", { storeId: fileSearchStore.storeId, agentId });
+
+          tools = {
+            file_search: google.tools.fileSearch({
+              fileSearchStoreNames: [fileSearchStore.storeId],
+              topK: 10,
+            }),
+          };
+        } catch (error) {
+          logger.error("Error getting File Search store", { error, agentId });
+          // Continue without File Search if store retrieval fails
+        }
       }
     }
 
@@ -98,11 +117,12 @@ export async function POST(req: Request) {
       model: google(process.env.GEMINI_MODEL || "gemini-2.5-flash"),
       messages: convertedMessages,
       system: systemPrompt || undefined,
-      tools: fileSearchTool || undefined,
+      tools: tools || undefined,
       // Extract citations after streaming completes (non-blocking)
       onFinish: async ({ text, finishReason }) => {
         // Only extract citations if we have an agentId and File Search is enabled
-        if (!agentId || !fileSearchTool) {
+        // Skip citation extraction for database-backed agents
+        if (!agentId || !fileSearchStore) {
           return;
         }
 

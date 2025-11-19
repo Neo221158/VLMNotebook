@@ -39,14 +39,28 @@ export async function SiteHeader() {
             >
               Home
             </Link>
-            {/* Documents link - admin only */}
+            <Link
+              href="/rabies-search"
+              className="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Rabies Search
+            </Link>
+            {/* Admin-only links */}
             {isAdmin && (
-              <Link
-                href="/documents"
-                className="text-foreground/60 hover:text-foreground transition-colors"
-              >
-                Documents
-              </Link>
+              <>
+                <Link
+                  href="/documents"
+                  className="text-foreground/60 hover:text-foreground transition-colors"
+                >
+                  Documents
+                </Link>
+                <Link
+                  href="/admin/rabies-authorities"
+                  className="text-foreground/60 hover:text-foreground transition-colors"
+                >
+                  Rabies Authorities
+                </Link>
+              </>
             )}
             <Link
               href="/docs"
